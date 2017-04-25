@@ -24,7 +24,7 @@ def getNextBus(routeName, stopCode):
         output = "The next bus will arrive in " + str(round(difference.seconds / 60)) + " minutes."
         print(output)
     except IndexError:
-        print("You did something wrong, dummy")
+        print("You did something wrong, dummy!")
     # get stop code, uuid
     # return output string, phone number
     
