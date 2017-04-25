@@ -81,13 +81,13 @@ def main():
         response = str(response)[1:]
         print(" [.] Got %r" % response)
         say(response)
-        """
+        
         client.messages.create(
                 to = "+12404995406",
                 from_ = "+12402058160",
                 body = response,
             )
-        """
+        
 
         print(" [.] Information was sent")
 
