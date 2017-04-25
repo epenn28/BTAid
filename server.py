@@ -16,7 +16,7 @@ SQUIRESWEST = "1113"
 SQUIRESEAST = "1110"
 NEWMAN = "1100"
 
-global output = ""
+output = ""
 
 
 def getNextBus(routeName, stopCode):
@@ -79,6 +79,7 @@ def main():
     channel.start_consuming()
     
 def on_request(ch, method, props, body):
+    global output
     request_msg = body
 
     print(" [.] BLE beacon UUID received:%s" % request_msg)
