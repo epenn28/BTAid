@@ -9,6 +9,7 @@ import os
 import pika
 import sys
 import argparse
+from ast import literal_eval as make_tuple
 
 TORG = "1114"
 BURRUSS = "1101"
@@ -80,11 +81,12 @@ def main():
     
 def on_request(ch, method, props, body):
     global output
+
     request_msg = body
 
     print(" [.] BLE beacon UUID received:%s" % request_msg)
 
-    (beaconUUID, busStop) = request_msg
+    (beaconUUID, busStop) = make_tuple(request_msg.decode())
     temp = collection.find_one({"beaconid": beaconUUID})
     
     phoneNumber = temp['phone']
