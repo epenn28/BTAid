@@ -16,8 +16,9 @@ def getNextBus(routeName, stopCode):
     root = ET.fromstring(r.text)
     try:
         nextBus = root[0].find('AdjustedDepartureTime').text
-        (nextDate, nextTime) = nextBus.split(" ", 1)
-        print("The next bus for {} stop {} will show up at {}.".format(routeName, stopCode, nextTime))
+        (nextDate, nextTime, ampm) = nextBus.split(" ")
+        (hours, minutes, seconds) = nextTime.split(":")
+        print("The next bus for {} stop {} will show up at {}:{} {}.".format(routeName, stopCode, hours, minutes, ampm))
         return (routeName, stopCode, nextTime)
     except IndexError:
         print("You did something wrong, dummy")
