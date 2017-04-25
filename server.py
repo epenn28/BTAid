@@ -2,6 +2,7 @@
 
 import requests
 import xml.etree.ElementTree as ET
+from datetime import datetime, date
 
 TORG = "1114"
 BURRUSS = "1101"
@@ -16,17 +17,20 @@ def getNextBus(routeName, stopCode):
     root = ET.fromstring(r.text)
     try:
         nextBus = root[0].find('AdjustedDepartureTime').text
-        (nextDate, nextTime, ampm) = nextBus.split(" ")
-        (hours, minutes, seconds) = nextTime.split(":")
-        print("The next bus for {} stop {} will show up at {}:{} {}.".format(routeName, stopCode, hours, minutes, ampm))
-        return (routeName, stopCode, nextTime)
+        # nextBus format: 4/25/2017 5:15 PM
+        timeStruct = datetime.strptime(nextBus, "%m/%d/%Y %I:%M:%S %p").time()
+        currentTime = datetime.now().time()
+        difference = datetime.combine(date.min, timeStruct) - datetime.combine(date.min, currentTime)
+        output = "The next bus will arrive in " + str(round(difference.seconds / 60)) + " minutes."
+        print(output)
     except IndexError:
         print("You did something wrong, dummy")
-    
+    # get stop code, uuid
+    # return output string, phone number
     
 def main():
-    (routeName, stopCode, nextTime) = getNextBus("HWDB", TORG)
-    print("Function returned", routeName, stopCode, nextTime)
+    getNextBus("HWDB", TORG)
+    #print("Function returned", routeName, stopCode, hours, minutes, ampm)
     
     
 if __name__ == '__main__':
