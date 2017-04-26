@@ -69,10 +69,10 @@ def main():
     	"phone": "+12404995406", "name": "Elliot Penn"},
     	{"beaconid": "EA8FCA33-C569-5E09-3260-E0D038256D3B", 
     	"pid": "kosovo", "route": "HWDA", 
-    	"phone": "+12404995406", "name": "Daulet Talapkaliyev"},
+    	"phone": "+15409981120", "name": "Daulet Talapkaliyev"},
     	{"beaconid": "394CD435-D71C-DCD9-1C8D-1218CE4DFE62", 
     	"pid": "anajahd4", "route": "UMS", 
-    	"phone": "+12404995406", "name": "Anajah Delestre"}]
+    	"phone": "+17577086232", "name": "Anajah Delestre"}]
 
     collection.insert_many(messages)
     
