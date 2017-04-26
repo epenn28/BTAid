@@ -10,12 +10,13 @@ import time
 import cgi
 import cgitb
 import subprocess
+from ast import literal_eval as make_tuple
 from twilio.rest import Client
 
 MY_BUSSTOP = "1101"
 
 # Test passanger UUIDs
-uuid_list = ["B9407F30-F5F8-466E-AFF9-25556B57FE6D","D0B32A8C-B407-AD88-D6DB-5E88C25E3438"]
+uuid_list = ["B9407F30-F5F8-466E-AFF9-25556B57FE6D","EA8FCA33-C569-5E09-3260-E0D038256D3B","394CD435-D71C-DCD9-1C8D-1218CE4DFE62"]
 
 cgitb.enable()
 
@@ -79,16 +80,20 @@ def main():
         request_payload = (MY_BUSSTOP, passenger_uuid)
         response = client_rpc.call(request_payload)
         response = str(response)[1:]
+        response = response.strip('"')
+        print(response)
+        (bus_info, user_phone) = make_tuple(response)
         print(" [.] Got %r" % response)
 
-        say(response)
+        say(bus_info)
         client.messages.create(
-                to = "+12404995406",
+                to = user_phone,
                 from_ = "+12402058160",
-                body = response,
+                body = bus_info,
             )
 
         print(" [.] Information was sent")
+        input("Press Enter for next test data...")
 
 
 if __name__ == '__main__':
