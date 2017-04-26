@@ -19,6 +19,13 @@ NEWMAN = "1100"
 
 output = ""
 
+client = MongoClient()
+
+db = client.my_database
+db.my_collection.drop()
+db.my_collection.create_index([("beaconid", 1)], unique=True)
+collection = db.my_collection
+
 
 def getNextBus(routeName, stopCode):
     userData = {'routeShortName': routeName, 'stopCode': stopCode}
@@ -38,6 +45,7 @@ def getNextBus(routeName, stopCode):
     # return output string, phone number
     
 def main():
+    global collection
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", metavar="message broker", required=True, dest="ip")
     args = parser.parse_args()
@@ -51,13 +59,7 @@ def main():
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     channel.queue_declare(queue='rpc_queue')
-    
-    client = MongoClient()
 
-    db = client.my_database
-    db.my_collection.drop()
-    db.my_collection.create_index([("beaconid", 1)], unique=True)
-    collection = db.my_collection
 
     messages = [{"beaconid": "B9407F30-F5F8-466E-AFF9-25556B57FE6D", 
     	"pid": "caml323", "route": "UCB", 
@@ -81,6 +83,7 @@ def main():
     
 def on_request(ch, method, props, body):
     global output
+    global collection
 
     request_msg = body
 
