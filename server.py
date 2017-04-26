@@ -33,11 +33,12 @@ def getNextBus(routeName, stopCode):
     root = ET.fromstring(r.text)
     try:
         nextBus = root[0].find('AdjustedDepartureTime').text
+        longRouteName = root[0].find('PatternName').text
         # nextBus format: 4/25/2017 5:15 PM
         timeStruct = datetime.strptime(nextBus, "%m/%d/%Y %I:%M:%S %p").time()
         currentTime = datetime.now().time()
         difference = datetime.combine(date.min, timeStruct) - datetime.combine(date.min, currentTime)
-        output = "The next bus will arrive in " + str(round(difference.seconds / 60)) + " minutes."
+        output = "The next " + longRouteName + " bus will arrive in " + str(round(difference.seconds / 60)) + " minutes."
         return(output)
     except IndexError:
         print("You did something wrong, dummy!")
