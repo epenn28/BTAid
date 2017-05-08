@@ -65,7 +65,7 @@ def main():
     messages = [{"beaconid": "D0B32A8C-B407-AD88-D6DB-5E88C25E3438", 
     	"pid": "caml323", "route": "UCB", 
     	"phone": "+12404860906", "name": "Cory Latham"}, 
-    	{"beaconid": "C9407F30-F5F8-466E-AFF9-25556B57FE6D", 
+    	{"beaconid": "B9407F30-F5F8-466E-AFF9-25556B57FE6D", 
     	"pid": "epenn28", "route": "HWDA", 
     	"phone": "+12404995406", "name": "Elliot Penn"},
     	{"beaconid": "EA8FCA33-C569-5E09-3260-E0D038256D3B", 
