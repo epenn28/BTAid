@@ -10,13 +10,22 @@ import time
 import cgi
 import cgitb
 import subprocess
+from threading import Timer
 from ast import literal_eval as make_tuple
 from twilio.rest import Client
+from beacontools import BeaconScanner, IBeaconFilter
 
 MY_BUSSTOP = "1101"
-
-# Test passanger UUIDs
-uuid_list = ["B9407F30-F5F8-466E-AFF9-25556B57FE6D","EA8FCA33-C569-5E09-3260-E0D038256D3B","394CD435-D71C-DCD9-1C8D-1218CE4DFE62"]
+SET_VAL = 3
+STATE_INIT = 4
+STATE_FOUND = 3
+STATE_WAIT = 2
+STATE_CHECK = 1
+STATE_REQUEST = 0
+STATE_DONE = -1
+THRESH_VAL = -75
+WAIT_PERIOD = 10
+REFRESH_PERIOD = 60
 
 cgitb.enable()
 
@@ -28,8 +37,50 @@ ip = args.ip
 print(" IP address: {}\n Virtual host: {}\n Credentials username: {}\n Credentials password: {}\n"
       .format(ip, "my_host12", "team12", "21maet"))
 
+count = 0
+total = 0
+rider = {'uuid': '0', 'flag_p1': STATE_INIT}
+
+
+def callback(bt_addr, rssi, packet, additional_info):
+    global count
+    global total
+    global rider
+
+    if count < SET_VAL:
+        total = total + rssi
+        count = count + 1
+    else:
+        avg = total / SET_VAL
+        total = 0
+        count = 0
+        print("Average:", avg)
+        if (avg > THRESH_VAL):
+            if (rider['flag_p1'] == STATE_INIT):
+                rider['flag_p1'] = STATE_FOUND
+                rider['uuid'] = additional_info['uuid']
+            elif (rider['flag_p1'] == STATE_CHECK):
+                rider['flag_p1'] = STATE_REQUEST
+        elif (avg <= THRESH_VAL):
+            if (rider['flag_p1'] == STATE_CHECK):
+                rider['flag_p1'] = STATE_INIT
+
+
+scanner = BeaconScanner(callback)
+scanner.start()
+
 def say(something):
     os.system('sudo flite -voice rms -t "{0}" 2>/dev/null'.format(something))
+
+def presence_check():
+    global rider
+    rider['flag_p1'] = STATE_CHECK
+    print(" [x] State changed to CHECK")
+
+def presence_refresh():
+    global rider
+    rider['flag_p1'] = STATE_INIT
+    print(" [x] State refreshed to INIT")
 
 class RpcClient(object):
     def __init__(self):
@@ -71,39 +122,55 @@ class RpcClient(object):
 
 def main():
 
+    global rider
+
     ACCOUNT_SID = "AC391fcbead1e4edb0e10194f9be44096e"
     AUTH_TOKEN = "c7945b061ae8f67654d0b6e61d2b77eb"
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
-    for passenger_uuid in uuid_list:
-        print(" [x] Requesting route information on UUID {}".format(passenger_uuid))
-        request_payload = (MY_BUSSTOP, passenger_uuid)
-        response = client_rpc.call(request_payload)
-        response = str(response)[1:]
-        response = response.strip('"')
-        print(response)
-        (bus_info, user_phone) = make_tuple(response)
-        print(" [.] Got %r" % response)
+    while True:
+        if (rider['flag_p1'] == STATE_FOUND):
+            rider['flag_p1'] = STATE_WAIT
+            print(" [x] State refreshed to WAIT")
+            t1 = Timer(WAIT_PERIOD, presence_check)
+            t1.start()
+        elif (rider['flag_p1'] == STATE_REQUEST):
+            rider['flag_p1'] = STATE_DONE
+            passenger_uuid = rider['uuid'].upper()
+            print(" [x] Requesting route information on UUID {}".format(passenger_uuid))
+            
+            request_payload = (MY_BUSSTOP, passenger_uuid)
+            response = client_rpc.call(request_payload)
+            response = str(response)[1:]
+            response = response.strip('"')
+            print(response)
+            (bus_info, user_phone) = make_tuple(response)
+            print(" [.] Got %r" % response)
 
-        say(bus_info)
-        client.messages.create(
-                to = user_phone,
-                from_ = "+12402058160",
-                body = bus_info,
-            )
-
-        print(" [.] Information was sent")
-        input("Press Enter for next test data...")
+            if (user_phone == "-1"):
+                print (" [!] ", bus_info)
+            else:
+                say(bus_info)
+                client.messages.create(
+                        to = user_phone,
+                        from_ = "+12402058160",
+                        body = bus_info,
+                    )
+                print(" [.] Information was sent")
+            t2 = Timer(REFRESH_PERIOD, presence_refresh)
+            t2.start()
 
 
 if __name__ == '__main__':
     try:
         client_rpc = RpcClient()
+
         main()
     # Capture Ctrl+C and cleanly exit
     except KeyboardInterrupt:
         # Close exchange connection
         client_rpc.close_connection
+        scanner.stop()
         print('Program was interrupted. Host RPi closed (close connection)')
         try:
             sys.exit(0)
