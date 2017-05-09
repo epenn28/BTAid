@@ -22,14 +22,7 @@ A Python/Raspberry Pi project to assist visually impaired riders on the Blacksbu
 * Flite:  
 `sudo apt-get install flite`
 * BLE dependencies:  
-```sudo apt-get install pkg-config
-   libboost-python-dev
-   libboost-thread-dev
-   libbluetooth-dev
-   libglib2.0-dev
-   libcap2-bin
-   python-dev
-```
+`sudo apt-get install pkg-config libboost-python-dev libboost-thread-dev libbluetooth-dev libglib2.0-dev libcap2-bin python-dev`
 * Grant Python permission to access sockets:  
 `sudo setcap 'cap_net_raw,cap_net_admin+eip' $(readlink -f $(which python))`
 * PyBluez with Bluetooth Low Energy support:  
