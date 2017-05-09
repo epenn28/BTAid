@@ -19,6 +19,7 @@ NEWMAN = "1100"
 
 output = ""
 
+# Set up Mongo database
 client = MongoClient()
 
 db = client.my_database
@@ -26,7 +27,7 @@ db.my_collection.drop()
 db.my_collection.create_index([("beaconid", 1)], unique=True)
 collection = db.my_collection
 
-
+# Function to return the next bus for a specific stop on a given route using BT4U web services 
 def getNextBus(routeName, stopCode):
     userData = {'routeShortName': routeName, 'stopCode': stopCode}
     r = requests.post("http://216.252.195.248/webservices/bt4u_webservice.asmx/GetNextDepartures", data=userData)
@@ -34,19 +35,23 @@ def getNextBus(routeName, stopCode):
     try:
         nextBus = root[0].find('AdjustedDepartureTime').text
         longRouteName = root[0].find('PatternName').text
-        # nextBus format: 4/25/2017 5:15 PM
+        # nextBus example format: 4/25/2017 5:15 PM
         timeStruct = datetime.strptime(nextBus, "%m/%d/%Y %I:%M:%S %p").time()
         currentTime = datetime.now().time()
         difference = datetime.combine(date.min, timeStruct) - datetime.combine(date.min, currentTime)
-        output = "The next " + longRouteName + " bus will arrive in " + str(round(difference.seconds / 60)) + " minutes."
+        numMins = round(difference.seconds / 60)
+        if numMins == 1:
+            output = "The next " + longRouteName + " bus will arrive in " + str(numMins) + " minute."
+        else:
+            output = "The next " + longRouteName + " bus will arrive in " + str(numMins) + " minutes."
         return(output)
+    # Exception handler for the web service returning invalid data (bus is not running)
     except IndexError:
-        print("You did something wrong, dummy!")
-    # get stop code, uuid
-    # return output string, phone number
+        print("BT4U API: there is no bus running on that route at this time.")
     
 def main():
     global collection
+    # Handle input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", metavar="message broker", required=True, dest="ip")
     args = parser.parse_args()
@@ -54,6 +59,7 @@ def main():
     print("IP address: {}\nVirtual host: {}\nCredentials username: {}\nCredentials password: {}\n"
           .format(ip, "my_host12", "team12", "21maet"))
     
+    # Set up pika connection with broker
     credentials = pika.PlainCredentials("team12", "21maet")
     parameters =  pika.ConnectionParameters(ip, 5672, "my_host12", credentials)
 
@@ -61,7 +67,7 @@ def main():
     channel = connection.channel()
     channel.queue_declare(queue='rpc_queue')
 
-
+    # Database values
     messages = [{"beaconid": "D0B32A8C-B407-AD88-D6DB-5E88C25E3438", 
     	"pid": "caml323", "route": "UCB", 
     	"phone": "+12404860906", "name": "Cory Latham"}, 
@@ -84,13 +90,12 @@ def main():
     
 def on_request(ch, method, props, body):
     global output
-    #global collection
-
     request_msg = body
-
+    # Get information from client Pi, check beacon UUID against database
     (busStop, beaconUUID) = make_tuple(request_msg.decode())
     temp = collection.find_one({"beaconid": beaconUUID})
     print(" [.] BLE beacon UUID received:%s" % beaconUUID)
+    # Create response tuple to send to client and handle unrecognized beacons
     if temp == None:
         output = "Incorrect beacon UUID"
         phoneNumber = "-1"
