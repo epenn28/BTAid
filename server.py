@@ -51,17 +51,10 @@ def getNextBus(routeName, stopCode):
     
 def main():
     global collection
-    # Handle input arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-b", metavar="message broker", required=True, dest="ip")
-    args = parser.parse_args()
-    ip = args.ip
-    print("IP address: {}\nVirtual host: {}\nCredentials username: {}\nCredentials password: {}\n"
-          .format(ip, "my_host12", "team12", "21maet"))
     
     # Set up pika connection with broker
     credentials = pika.PlainCredentials("team12", "21maet")
-    parameters =  pika.ConnectionParameters(ip, 5672, "my_host12", credentials)
+    parameters =  pika.ConnectionParameters("localhost", 5672, "my_host12", credentials)
 
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()

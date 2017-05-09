@@ -35,7 +35,7 @@ A Python/Raspberry Pi project to assist visually impaired riders on the Blacksbu
 ### Usage
 
 1. On the server, run `ifconfig` and note the IPv4 address (inet addr under wlan0)
-2. Server: `sudo python3 server.py -b server IP address`
+2. Server: `sudo python3 server.py`
 3. Clients: `sudo python3 client.py -b server IP address`
 
 ### Project Demonstration
